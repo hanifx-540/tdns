@@ -2,7 +2,7 @@ from flask import Flask, request
 import os
 
 app = Flask(__name__)
-SECRET_KEY = "hanifx2025"  # আপনি চাইলে strong key দিতে পারেন
+SECRET_KEY = "hanifx2025"
 
 @app.route("/")
 def home():
@@ -24,3 +24,6 @@ def lock():
         open("BLOCK_MODE", "w").write("1")
         return "🔒 Internet BLOCKED!"
     return "⛔ Access Denied"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
