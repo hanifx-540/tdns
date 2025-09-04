@@ -1,113 +1,82 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template_string, request, session, redirect, url_for
-from hanifx import otp_generate, otp_verify
-import secrets
+from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime, timedelta
+import secrets
 
-# -----------------------
-# Terminal coloring
-# -----------------------
-from rich.console import Console
-console = Console()
+# Simulate hanifx OTP module
+def otp_generate(secret):
+    return str(secrets.randbelow(1000000)).zfill(6)
 
-# -----------------------
-# Flask app
-# -----------------------
+def otp_verify(secret, otp_input):
+    return True
+
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-# -----------------------
-# Users storage
-# -----------------------
 users = {}
 
-# -----------------------
-# Redirect / to /login
-# -----------------------
 @app.route("/")
 def home():
     return redirect(url_for("login"))
 
-# -----------------------
-# Register
-# -----------------------
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/register", methods=["GET","POST"])
 def register():
+    message = None
+    color = "info"
     if request.method == "POST":
         email = request.form.get("email")
         if email in users:
-            return "<h3 style='color:red;'>Email already registered!</h3>"
-        secret = secrets.token_hex(16)
-        users[email] = {"secret": secret, "otp": None, "expiry": None}
-        console.print(f"[bold green]Registered:[/bold green] {email}")
-        return f"<h3 style='color:green;'>User {email} registered successfully!</h3>"
-    return render_template_string("""
-        <h2 style="color:blue;">Register</h2>
-        <form method="post">
-            Email: <input name="email" type="email" required>
-            <button type="submit" style="background-color:green;color:white;">Register</button>
-        </form>
-    """)
+            message = "Email already registered!"
+            color = "danger"
+        else:
+            secret = secrets.token_hex(16)
+            users[email] = {"secret": secret, "otp": None, "expiry": None}
+            message = f"User {email} registered successfully!"
+            color = "success"
+    return render_template("register.html", message=message, color=color)
 
-# -----------------------
-# Login / Generate OTP
-# -----------------------
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
+    message = None
+    color = "info"
     if request.method == "POST":
         email = request.form.get("email")
         if email not in users:
-            return "<h3 style='color:red;'>Email not registered!</h3>"
-        secret = users[email]["secret"]
-        otp_code = otp_generate(secret)
-        expiry = datetime.now() + timedelta(minutes=5)
-        users[email]["otp"] = otp_code
-        users[email]["expiry"] = expiry
-        session["email"] = email
-        console.print(f"[bold yellow]OTP for {email}:[/bold yellow] {otp_code}")
-        return redirect(url_for("verify"))
-    return render_template_string("""
-        <h2 style="color:purple;">Login</h2>
-        <form method="post">
-            Email: <input name="email" type="email" required>
-            <button type="submit" style="background-color:orange;color:white;">Generate OTP</button>
-        </form>
-    """)
+            message = "Email not registered!"
+            color = "danger"
+        else:
+            secret = users[email]["secret"]
+            otp_code = otp_generate(secret)
+            expiry = datetime.now() + timedelta(minutes=5)
+            users[email]["otp"] = otp_code
+            users[email]["expiry"] = expiry
+            session["email"] = email
+            print(f"🔑 OTP for {email}: {otp_code}")  # Console demo
+            return redirect(url_for("verify"))
+    return render_template("login.html", message=message, color=color)
 
-# -----------------------
-# Verify OTP
-# -----------------------
-@app.route("/verify", methods=["GET", "POST"])
+@app.route("/verify", methods=["GET","POST"])
 def verify():
     email = session.get("email")
+    message = None
+    color = "info"
     if not email:
         return redirect(url_for("login"))
-
     if request.method == "POST":
-        user_input = request.form.get("otp_input")
+        otp_input = request.form.get("otp_input")
         record = users.get(email)
         if datetime.now() > record["expiry"]:
-            return "<h3 style='color:red;'>❌ OTP expired. Try again.</h3>"
-        if otp_verify(record["secret"], user_input) and user_input == record["otp"]:
-            console.print(f"[bold green]OTP verified for {email}[/bold green]")
-            return "<h3 style='color:green;'>✅ OTP Verified. Login Successful!</h3>"
+            message = "OTP expired. Try again."
+            color = "danger"
+        elif otp_verify(record["secret"], otp_input) and otp_input == record["otp"]:
+            message = "✅ OTP Verified! Login Successful."
+            color = "success"
         else:
-            console.print(f"[bold red]Invalid OTP for {email}[/bold red]")
-            return "<h3 style='color:red;'>❌ Invalid OTP!</h3>"
+            message = "❌ Invalid OTP!"
+            color = "danger"
+    return render_template("verify.html", message=message, color=color)
 
-    return render_template_string("""
-        <h2 style="color:teal;">Enter OTP</h2>
-        <form method="post">
-            OTP: <input name="otp_input" type="text" required>
-            <button type="submit" style="background-color:blue;color:white;">Verify</button>
-        </form>
-    """)
-
-# -----------------------
-# Run Flask
-# -----------------------
 if __name__ == "__main__":
-    # For Render.com use 0.0.0.0 and port from environment variable
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
