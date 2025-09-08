@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HanifX Encode System</title>
+
+<!-- Tailwind CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+
+<!-- Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div class="bg-white shadow-xl rounded-xl p-8 max-w-xl w-full animate__animated animate__fadeIn">
+    <h1 class="text-3xl font-bold mb-4 text-center text-indigo-600">HanifX Encode</h1>
+
+    <form id="encodeForm" class="flex flex-col gap-4">
+        <input type="text" id="textInput" placeholder="Enter text to encode" class="border p-3 rounded-lg focus:ring-2 focus:ring-indigo-400" required>
+        <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all duration-300">
+            <i class="fa-solid fa-lock"></i> Encode
+        </button>
+    </form>
+
+    <div id="resultContainer" class="mt-4 hidden">
+        <p class="text-gray-700 font-semibold">Encoded Result:</p>
+        <textarea id="encodedText" readonly class="w-full h-32 border rounded-lg p-2 mt-2"></textarea>
+    </div>
+</div>
+
+<!-- GSAP for animations -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<!-- Alpine.js -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+<!-- Custom JS -->
+<script src="/static/script.js"></script>
+
+</body>
+          </html>
