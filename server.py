@@ -1,29 +1,22 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import secrets, os
+import hanifx  # HanifX 24.0.0 module
 
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app)
 
-# ডেমো API key storage (production: DB)
-API_KEYS = {
-    "test-123": "Test User"
-}
-
-# Admin secret (API key generate)
+USER_API_KEYS = {}    # username: api_key
+VALID_API_KEYS = {}   # all valid keys
 ADMIN_SECRET = "SUPERSECRETADMIN"
 
-def real_encode(text: str) -> str:
-    """Demo encode – আপনার মূল encode লজিক বসান"""
-    return text[::-1]
-
 # ===========================
-# API: Encode
+# Encode API
 # ===========================
 @app.route("/encode", methods=["POST"])
 def encode_api():
     api_key = request.headers.get("Authorization")
-    if api_key not in API_KEYS:
+    if api_key not in VALID_API_KEYS:
         return jsonify({"status":"error","message":"Invalid API Key"}), 401
 
     data = request.get_json()
@@ -31,11 +24,34 @@ def encode_api():
     if not text:
         return jsonify({"status":"error","message":"No text provided"}), 400
 
-    encoded = real_encode(text)
-    return jsonify({"status":"success","user":API_KEYS[api_key],"encoded":encoded})
+    try:
+        encoded = hanifx.encode(text)  # HanifX encode function
+    except Exception as e:
+        return jsonify({"status":"error","message":str(e)}), 500
+
+    return jsonify({"status":"success","user":VALID_API_KEYS[api_key],"encoded":encoded})
 
 # ===========================
-# API: Generate new API key (Admin only)
+# User API Key generate
+# ===========================
+@app.route("/register", methods=["POST"])
+def register_user():
+    data = request.get_json()
+    username = data.get("username")
+    if not username:
+        return jsonify({"error":"Username required"}), 400
+
+    if username in USER_API_KEYS:
+        key = USER_API_KEYS[username]
+        return jsonify({"message":"Existing API key","api_key":key})
+
+    new_key = secrets.token_hex(16)
+    USER_API_KEYS[username] = new_key
+    VALID_API_KEYS[new_key] = username
+    return jsonify({"message":"API key generated successfully","api_key":new_key})
+
+# ===========================
+# Admin API Key generate
 # ===========================
 @app.route("/generate-key", methods=["POST"])
 def generate_key():
@@ -44,9 +60,10 @@ def generate_key():
         return jsonify({"error":"Unauthorized"}), 401
 
     data = request.get_json()
-    username = data.get("username","User")
-    new_key = secrets.token_hex(16)  # 32-character key
-    API_KEYS[new_key] = username
+    username = data.get("username","AdminUser")
+    new_key = secrets.token_hex(16)
+    USER_API_KEYS[username] = new_key
+    VALID_API_KEYS[new_key] = username
     return jsonify({"message":"API Key generated","api_key":new_key,"user":username})
 
 # ===========================
