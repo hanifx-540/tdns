@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hanifx Encode</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Hanifx Encode Service</h1>
+
+  <label for="textInput">Enter Text:</label>
+  <input type="text" id="textInput" placeholder="Enter text">
+
+  <label for="apiKeyInput">Enter API Key:</label>
+  <input type="text" id="apiKeyInput" placeholder="Enter API Key">
+
+  <button onclick="encode()">Encode</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function encode() {
+      const text = document.getElementById('textInput').value;
+      const apiKey = document.getElementById('apiKeyInput').value;
+
+      if (!text || !apiKey) {
+        document.getElementById('result').innerText = "Please provide both text and API key.";
+        return;
+      }
+
+      try {
+        const res = await fetch('/encode', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': apiKey
+          },
+          body: JSON.stringify({data: text})
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          document.getElementById('result').innerText =
+            `User: ${data.user}\nEncoded: ${data.encoded}`;
+        } else {
+          document.getElementById('result').innerText =
+            `Error: ${data.message}`;
+        }
+      } catch (err) {
+        document.getElementById('result').innerText = `Error: ${err}`;
+      }
+    }
+  </script>
+</body>
+</html>
