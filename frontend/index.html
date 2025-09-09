@@ -1,56 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hanifx Encode</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HanifX 24.0.0 WebApp</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Hanifx Encode Service</h1>
 
-  <label for="textInput">Enter Text:</label>
-  <input type="text" id="textInput" placeholder="Enter text">
+<div class="container">
+  <h1>HanifX 24.0.0 Encoder</h1>
 
-  <label for="apiKeyInput">Enter API Key:</label>
-  <input type="text" id="apiKeyInput" placeholder="Enter API Key">
+  <!-- Encode Section -->
+  <div class="section encode">
+    <textarea id="inputText" placeholder="Enter text to encode"></textarea>
+    <input type="text" id="apiKey" placeholder="Enter your API Key">
+    <button onclick="encodeText()">Encode</button>
+    <div id="encodeResult"></div>
+  </div>
 
-  <button onclick="encode()">Encode</button>
+  <hr>
 
-  <div id="result"></div>
+  <!-- Generate API Key Section (Admin Only) -->
+  <div class="section generate">
+    <h2>Generate API Key (Admin)</h2>
+    <input type="text" id="newUser" placeholder="Enter username">
+    <input type="text" id="adminSecret" placeholder="Enter Admin Secret">
+    <button onclick="generateApiKey()">Generate Key</button>
+    <div id="generatedKey"></div>
+  </div>
+</div>
 
-  <script>
-    async function encode() {
-      const text = document.getElementById('textInput').value;
-      const apiKey = document.getElementById('apiKeyInput').value;
+<script>
+async function encodeText(){
+    const text = document.getElementById("inputText").value;
+    const apiKey = document.getElementById("apiKey").value;
+    if(!text||!apiKey){ alert("Provide text and API key"); return;}
 
-      if (!text || !apiKey) {
-        document.getElementById('result').innerText = "Please provide both text and API key.";
-        return;
-      }
-
-      try {
-        const res = await fetch('/encode', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': apiKey
-          },
-          body: JSON.stringify({data: text})
+    try{
+        const res = await fetch("/encode",{
+            method:"POST",
+            headers:{"Content-Type":"application/json","Authorization":apiKey},
+            body:JSON.stringify({text})
         });
         const data = await res.json();
+        document.getElementById("encodeResult").innerText = 
+            data.status==="success"? `User: ${data.user}\nEncoded: ${data.encoded}` : `Error: ${data.message}`;
+    }catch(err){document.getElementById("encodeResult").innerText="Error:"+err;}
+}
 
-        if (data.status === "success") {
-          document.getElementById('result').innerText =
-            `User: ${data.user}\nEncoded: ${data.encoded}`;
-        } else {
-          document.getElementById('result').innerText =
-            `Error: ${data.message}`;
-        }
-      } catch (err) {
-        document.getElementById('result').innerText = `Error: ${err}`;
-      }
-    }
-  </script>
+async function generateApiKey(){
+    const username = document.getElementById("newUser").value;
+    const adminSecret = document.getElementById("adminSecret").value;
+    if(!username||!adminSecret){alert("Enter both fields");return;}
+
+    try{
+        const res = await fetch("/generate-key",{
+            method:"POST",
+            headers:{"Content-Type":"application/json","Admin-Secret":adminSecret},
+            body:JSON.stringify({username})
+        });
+        const data = await res.json();
+        document.getElementById("generatedKey").innerText = data.error ? "Error: "+data.error 
+            : `User: ${data.user}\nAPI Key: ${data.api_key}`;
+    }catch(err){document.getElementById("generatedKey").innerText="Error:"+err;}
+}
+</script>
+
 </body>
 </html>
