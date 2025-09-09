@@ -1,45 +1,61 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import os
+import secrets, os
 
 app = Flask(__name__, static_folder='frontend', static_url_path='')
-CORS(app)  # ফ্রন্টএন্ড থেকে API কল করার অনুমতি
+CORS(app)
 
-# ডেমো API keys (চাইলে ডাটাবেজে রাখতে পারেন)
-VALID_KEYS = {
-    "test-123": "Test User",
-    "abc-456": "Premium User"
+# ডেমো API key storage (production: DB)
+API_KEYS = {
+    "test-123": "Test User"
 }
 
-def real_encode(data: str) -> str:
-    """
-    এখানে আপনার আসল encode লজিক বসান
-    এখন ডেমো হিসেবে শুধু উল্টে দিচ্ছি
-    """
-    return data[::-1]
+# Admin secret (API key generate)
+ADMIN_SECRET = "SUPERSECRETADMIN"
 
-@app.route("/")
-def serve_frontend():
-    # ফ্রন্টএন্ডের index.html সার্ভ করবে
-    return send_from_directory('frontend', 'index.html')
+def real_encode(text: str) -> str:
+    """Demo encode – আপনার মূল encode লজিক বসান"""
+    return text[::-1]
 
+# ===========================
+# API: Encode
+# ===========================
 @app.route("/encode", methods=["POST"])
-def encode():
+def encode_api():
     api_key = request.headers.get("Authorization")
-    if api_key not in VALID_KEYS:
-        return jsonify({"status": "error", "message": "Invalid API key"}), 401
+    if api_key not in API_KEYS:
+        return jsonify({"status":"error","message":"Invalid API Key"}), 401
 
-    payload = request.get_json(silent=True)
-    if not payload or "data" not in payload:
-        return jsonify({"status": "error", "message": "Missing data field"}), 400
+    data = request.get_json()
+    text = data.get("text","")
+    if not text:
+        return jsonify({"status":"error","message":"No text provided"}), 400
 
-    encoded = real_encode(payload["data"])
-    return jsonify({
-        "status": "success",
-        "user": VALID_KEYS[api_key],
-        "encoded": encoded
-    })
+    encoded = real_encode(text)
+    return jsonify({"status":"success","user":API_KEYS[api_key],"encoded":encoded})
+
+# ===========================
+# API: Generate new API key (Admin only)
+# ===========================
+@app.route("/generate-key", methods=["POST"])
+def generate_key():
+    admin_secret = request.headers.get("Admin-Secret")
+    if admin_secret != ADMIN_SECRET:
+        return jsonify({"error":"Unauthorized"}), 401
+
+    data = request.get_json()
+    username = data.get("username","User")
+    new_key = secrets.token_hex(16)  # 32-character key
+    API_KEYS[new_key] = username
+    return jsonify({"message":"API Key generated","api_key":new_key,"user":username})
+
+# ===========================
+# Serve frontend
+# ===========================
+@app.route("/")
+def home():
+    return send_from_directory('frontend','index.html')
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT",5000))
     app.run(host="0.0.0.0", port=port)
