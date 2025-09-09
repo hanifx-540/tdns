@@ -1,46 +1,76 @@
 body {
-  font-family: Arial, sans-serif;
-  max-width: 500px;
-  margin: auto;
-  padding: 20px;
-  background: #f8f8f8;
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(120deg,#89f7fe,#66a6ff);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
 }
 
-h1 {
-  text-align: center;
-  color: #333;
+.container{
+  background: rgba(255,255,255,0.95);
+  padding:30px;
+  border-radius:15px;
+  width:450px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  transform-style: preserve-3d;
+  animation: float 6s ease-in-out infinite;
 }
 
-label {
-  margin-top: 10px;
-  display: block;
-  font-weight: bold;
+@keyframes float{
+  0%,100%{transform: translateY(0px) rotateX(0deg);}
+  50%{transform: translateY(-15px) rotateX(5deg);}
 }
 
-input, button {
-  display: block;
-  margin-top: 5px;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
+h1, h2{text-align:center; color:#333;}
+textarea, input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
-button {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
+textarea:focus, input:focus{
+  box-shadow: 0 0 10px #66a6ff;
+  border-color:#66a6ff;
+  outline:none;
 }
 
-button:hover {
-  background-color: #45a049;
+button{
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  background: linear-gradient(45deg,#ff6ec4,#7873f5);
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  transition: all 0.3s ease;
 }
 
-#result {
-  margin-top: 20px;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid #ccc;
+button:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+#encodeResult,#generatedKey{
+  margin-top:15px;
+  padding:10px;
+  background: linear-gradient(90deg,#f7ff6f,#6effa1);
+  border-radius:8px;
+  color:#333;
+  font-weight:bold;
   white-space: pre-wrap;
+  text-align:center;
+  animation: glow 2s ease-in-out infinite alternate;
 }
+
+@keyframes glow{
+  0%{box-shadow:0 0 5px #fff;}
+  100%{box-shadow:0 0 20px #fff;}
+    }
