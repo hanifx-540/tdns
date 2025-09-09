@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HanifX Encoder/Decoder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>HanifX Encoder/Decoder</h1>
+        <textarea id="text" placeholder="Type your text here..."></textarea>
+        <div class="buttons">
+            <button onclick="sendRequest('encode')">Encode</button>
+            <button onclick="sendRequest('decode')">Decode</button>
+        </div>
+        <textarea id="result" placeholder="Result will appear here..." readonly></textarea>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
