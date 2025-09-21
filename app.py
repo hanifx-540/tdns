@@ -1,33 +1,44 @@
-from flask import Flask, render_template, request, jsonify
-import hanifx  # HanifX 24.0.0
+from flask import Flask, request, jsonify
+import hanifx
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/", methods=["GET"])
 def index():
-    return render_template('index.html')
+    return jsonify({
+        "message": "Welcome to Hanifx API v24",
+        "endpoints": ["/encode-text (POST)", "/encode-file (POST)"]
+    })
 
-@app.route('/encode', methods=['POST'])
-def encode():
-    data = request.json.get('text', '')
-    if not data:
-        return jsonify({'error': 'No text provided!'}), 400
+@app.route("/encode-text", methods=["POST"])
+def encode_text():
     try:
-        encoded = hanifx.encode(data)  # HanifX encode
-        return jsonify({'result': encoded})
+        data = request.get_json(force=True)
+        text = data.get("text", "")
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+        encoded = hanifx.encode_text(text)
+        return jsonify({"encoded": encoded})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/decode', methods=['POST'])
-def decode():
-    data = request.json.get('text', '')
-    if not data:
-        return jsonify({'error': 'No text provided!'}), 400
+@app.route("/encode-file", methods=["POST"])
+def encode_file():
     try:
-        decoded = hanifx.decode(data)  # HanifX decode
-        return jsonify({'result': decoded})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        content = file.read()
+        encoded_file = hanifx.encode_file_content(content)
+        return jsonify({
+            "filename": file.filename,
+            "encoded_content": encoded_file
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
