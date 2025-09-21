@@ -1,2 +1,2 @@
-Flask
+flask==3.0.3
 hanifx==24.0.0
